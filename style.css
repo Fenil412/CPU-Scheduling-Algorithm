@@ -1,0 +1,329 @@
+/* Custom Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+    
+/* Root Variables for Dark Theme */
+:root {
+    --bg-primary: #1a1a2e; /* Dark navy for body */
+    --bg-secondary: #16213e; /* Lighter navy for containers */
+    --bg-element: #0f172a; /* Dark slate for inputs, tables, etc. */
+    --text-primary: #e0e0e0; /* Light gray text */
+    --text-secondary: #b0c4de; /* Light steel blue for labels and secondary text */
+    --accent: #00d4ff; /* Neon cyan for highlights */
+    --shadow-color: rgba(0, 212, 255, 0.3); /* Neon shadow */
+    --border-color: #333652; /* Dark border */
+    --timeline-color: #4b5e8c; /* Subtle blue-gray for timeline */
+}
+
+/* Base Styles */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Roboto Mono', monospace;
+    min-height: 100vh;
+    padding: 2rem;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.container {
+    background-color: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    margin: 0 auto;
+    max-width: 100%;
+    animation: fadeIn 1s ease-in-out;
+}
+
+h1, h2 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--shadow-color);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Input and Label Styles */
+label {
+    color: var(--text-secondary); /* Light steel blue for labels */
+    font-family: 'Roboto Mono', monospace;
+    margin-bottom: 0.5rem;
+    display: block;
+    transition: color 0.3s ease;
+}
+
+input:hover + label, select:hover + label {
+    color: var(--accent); /* Neon cyan on hover */
+}
+
+input, select, button {
+    background-color: var(--bg-element);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-family: 'Roboto Mono', monospace;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--shadow-color);
+}
+
+button {
+    background-color: #1e3a8a;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--accent);
+    color: var(--bg-primary);
+    box-shadow: 0 0 15px var(--shadow-color);
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    background-color: #4b5e8c;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Table Styles */
+table {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--bg-element);
+    color: var(--accent);
+    font-family: 'Orbitron', sans-serif;
+    padding: 1rem;
+}
+
+td {
+    background-color: var(--bg-element);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Gantt Chart Styles */
+.gantt-container {
+    overflow-x: auto;
+    margin-top: 4rem; /* Increased to accommodate indicator above */
+    padding-bottom: 5rem; /* Increased space for timeline */
+    position: relative;
+    width: 100%;
+    background-color: var(--bg-secondary);
+}
+
+#ganttChart {
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background-color: var(--bg-element);
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.process-block {
+    position: absolute;
+    text-align: center;
+    color: var(--text-primary);
+    font-family: 'Roboto Mono', monospace;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 2px solid var(--border-color);
+    border-radius: 0.25rem;
+}
+
+.process-block.active-process {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--shadow-color);
+    z-index: 5;
+    animation: pulse 1s infinite;
+}
+
+.process-block.inactive-process {
+    opacity: 0.7;
+}
+
+.process-block.future-process {
+    opacity: 0.5;
+}
+
+.time-marker {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-family: 'Orbitron', sans-serif;
+    transition: color 0.3s ease;
+}
+
+.time-marker.multiple-five {
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+.time-marker.multiple-five::after {
+    content: '';
+    position: absolute;
+    height: 1.25rem;
+    width: 3px;
+    background-color: var(--accent);
+    bottom: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.time-line {
+    position: absolute;
+    width: 1px;
+    background-color: var(--timeline-color);
+    z-index: 1;
+}
+
+.time-line.multiple-five {
+    width: 3px;
+    background-color: var(--accent);
+}
+
+#ganttHeading {
+    height: 2.5rem;
+    text-align: left;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    font-style: italic;
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+
+.animation-time-marker {
+    position: absolute;
+    width: 3px;
+    background-color: #ff4444;
+    top: 0;
+    z-index: 20;
+    transition: left 0.1s linear;
+}
+
+.animation-time-marker::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #ff4444;
+}
+
+.process-track {
+    position: absolute;
+    border: 1px dashed var(--border-color);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#currentProcessIndicator {
+    position: absolute;
+    top: -4rem; /* Positioned above Gantt chart */
+    left: 50%;
+    transform: translateX(-50%); /* Centered horizontally */
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--accent);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 15px var(--shadow-color);
+    z-index: 30; /* High z-index to stay above everything */
+    font-family: 'Orbitron', sans-serif;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+/* Results Section */
+#results {
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: var(--bg-element);
+}
+
+#results .bg-blue-50, #results .bg-green-50 {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--accent);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#results h3 {
+    color: var(--accent);
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+#results p {
+    color: var(--text-primary);
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Override any light backgrounds */
+.bg-white, .bg-gray-100, .bg-gray-200 {
+    background-color: var(--bg-element) !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 10px var(--shadow-color); }
+    50% { box-shadow: 0 0 20px var(--shadow-color); }
+    100% { box-shadow: 0 0 10px var(--shadow-color); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .animation-controls {
+        flex-direction: column;
+    }
+    .gantt-container {
+        padding-bottom: 6rem;
+    }
+    #currentProcessIndicator {
+        top: -3.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        width: 90%; /* Responsive width */
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}

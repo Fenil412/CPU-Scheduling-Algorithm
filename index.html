@@ -6,60 +6,235 @@
     <title>CPU Scheduling Algorithms Visualization</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Custom Font Imports */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+    
+        /* Root Variables for Dark Theme */
+        :root {
+            --bg-primary: #1a1a2e; /* Dark navy for body */
+            --bg-secondary: #16213e; /* Lighter navy for containers */
+            --bg-element: #0f172a; /* Dark slate for inputs, tables, etc. */
+            --text-primary: #e0e0e0; /* Light gray text */
+            --text-secondary: #87ceeb; /* Sky blue for labels and secondary text */
+            --accent: #00d4ff; /* Neon cyan for highlights */
+            --shadow-color: rgba(0, 212, 255, 0.3); /* Neon shadow */
+            --border-color: #333652; /* Dark border */
+            --timeline-color: #4b5e8c; /* Subtle blue-gray for timeline */
+        }
+    
+        /* Base Styles */
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Roboto Mono', monospace;
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+            overflow-x: hidden;
+        }
+    
+        .container {
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin: 0 auto;
+            max-width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+    
+        h1, h2 {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--shadow-color);
+        }
+    
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+    
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    
+        /* Input and Label Styles */
+        label {
+            color: var(--text-secondary); /* Sky blue for labels, dark theme base */
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 0.5rem;
+            display: block;
+            transition: color 0.3s ease;
+        }
+    
+        input:hover + label, select:hover + label {
+            color: var(--accent); /* Neon cyan on hover */
+        }
+    
+        input, select, button {
+            background-color: var(--bg-element);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.3s ease;
+        }
+    
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+    
+        button {
+            background-color: #1e3a8a;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px var(--shadow-color);
+            transform: translateY(-2px);
+        }
+    
+        button:disabled {
+            background-color: #4b5e8c;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    
+        /* Table Styles */
+        table {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+    
+        th {
+            background-color: var(--bg-element);
+            color: var(--accent);
+            font-family: 'Orbitron', sans-serif;
+            padding: 1rem;
+        }
+    
+        td {
+            background-color: var(--bg-element);
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+    
+        /* Gantt Chart Styles */
+        .gantt-container {
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            padding-bottom: 6rem; /* Increased for timeline visibility */
+            position: relative;
+            width: 100%;
+            background-color: var(--bg-secondary);
+        }
+    
+        #ganttChart {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: var(--bg-element);
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+    
         .process-block {
             position: absolute;
             text-align: center;
-            color: white;
+            color: var(--text-primary);
+            font-family: 'Roboto Mono', monospace;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.3s, transform 0.2s;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border: 2px solid var(--border-color);
+            border-radius: 0.25rem;
         }
+    
+        .process-block.active-process {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--shadow-color);
+            z-index: 5;
+            animation: pulse 1s infinite;
+        }
+    
+        .process-block.inactive-process {
+            opacity: 0.7;
+        }
+    
+        .process-block.future-process {
+            opacity: 0.5;
+        }
+    
         .time-marker {
             position: absolute;
-            bottom: -25px;
             transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-family: 'Orbitron', sans-serif;
+            transition: color 0.3s ease;
         }
+    
         .time-marker.multiple-five {
             font-weight: bold;
-            color: #000;
+            color: var(--accent);
+            font-size: 1rem;
         }
+    
         .time-marker.multiple-five::after {
             content: '';
             position: absolute;
-            height: 15px;
-            width: 2px;
-            background-color: black;
-            bottom: -10px;
+            height: 1.5rem; /* Increased for visibility */
+            width: 3px;
+            background-color: var(--accent);
+            bottom: -1.25rem; /* Adjusted to fit */
             left: 50%;
             transform: translateX(-50%);
         }
+    
         .time-line {
             position: absolute;
             width: 1px;
-            background-color: #ccc;
-            top: 0;
-            bottom: 0;
+            background-color: var(--timeline-color);
+            z-index: 1;
         }
+    
         .time-line.multiple-five {
-            width: 2px;
-            background-color: #000;
+            width: 3px;
+            background-color: var(--accent);
         }
-        .gantt-container {
-            overflow-x: auto;
-            margin-top: 40px;
-            padding-bottom: 30px;
+    
+        #ganttHeading {
+            height: 2.5rem;
+            text-align: left;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-style: italic;
+            color: var(--accent);
+            margin-bottom: 1rem;
         }
+    
         .animation-time-marker {
             position: absolute;
             width: 3px;
-            background-color: red;
+            background-color: #ff4444;
             top: 0;
-            bottom: -20px;
             z-index: 20;
             transition: left 0.1s linear;
         }
+    
         .animation-time-marker::after {
             content: '';
             position: absolute;
@@ -70,58 +245,131 @@
             height: 0;
             border-left: 8px solid transparent;
             border-right: 8px solid transparent;
-            border-bottom: 8px solid red;
+            border-bottom: 8px solid #ff4444;
         }
+    
         .process-track {
             position: absolute;
-            border: 1px dashed #ccc;
+            border: 1px dashed var(--border-color);
+            background-color: rgba(255, 255, 255, 0.05);
         }
-        .future-process {
-            opacity: 0.5;
+    
+        #currentProcessIndicator {
+            position: absolute;
+            top: -4rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--accent);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 15px var(--shadow-color);
+            z-index: 30;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            text-align: center;
         }
-        .active-process {
-            opacity: 1;
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 5;
+    
+        /* Results Section */
+        #results {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: var(--bg-element);
         }
-        .inactive-process {
-            opacity: 0.7;
+    
+        #results .bg-blue-50, #results .bg-green-50 {
+            background-color: var(--bg-secondary) !important;
+            border: 1px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        /* Make the animation controls responsive */
+    
+        #results h3 {
+            color: var(--accent);
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 0.5rem;
+        }
+    
+        #results p {
+            color: var(--text-primary);
+            font-family: 'Roboto Mono', monospace;
+        }
+    
+        /* Override any light backgrounds */
+        .bg-white, .bg-gray-100, .bg-gray-200 {
+            background-color: var(--bg-element) !important;
+        }
+    
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px var(--shadow-color); }
+            50% { box-shadow: 0 0 20px var(--shadow-color); }
+            100% { box-shadow: 0 0 10px var(--shadow-color); }
+        }
+    
+        /* Responsive Design */
         @media (max-width: 768px) {
             .animation-controls {
                 flex-direction: column;
             }
+            .gantt-container {
+                padding-bottom: 7rem; /* Increased for mobile */
+            }
+            #currentProcessIndicator {
+                top: -3.5rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+                width: 90%;
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
     </style>
+
 </head>
+
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="container mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-3xl font-bold text-center mb-6">CPU Scheduling Algorithms Visualization</h1>
-        
+
         <!-- Input Section -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold mb-4">Enter Process Details</h2>
             <div class="flex flex-wrap gap-4 mb-4">
                 <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Process Name</label>
+                    <label class="block text-gray-300 mb-2">Process Name</label>
                     <input type="text" id="processName" class="w-full px-3 py-2 border rounded" placeholder="P1">
                 </div>
+
                 <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Arrival Time</label>
-                    <input type="number" id="arrivalTime" class="w-full px-3 py-2 border rounded" min="0" placeholder="0">
+                    <label class="block text-gray-300 mb-2">Arrival Time</label>
+                    <input type="number" id="arrivalTime" class="w-full px-3 py-2 border rounded" min="0"
+                        placeholder="0">
                 </div>
+
                 <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Burst Time</label>
+                    <label class="block text-gray-300 mb-2">Burst Time</label>
                     <input type="number" id="burstTime" class="w-full px-3 py-2 border rounded" min="1" placeholder="5">
                 </div>
+
                 <div class="w-full md:w-1/4 flex items-end">
-                    <button id="addProcess" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Add Process</button>
+                    <button id="addProcess"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Add Process</button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Process Table -->
         <div class="mb-8 overflow-x-auto">
             <h2 class="text-xl font-semibold mb-4">Process List</h2>
@@ -139,13 +387,13 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Algorithm Selection -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold mb-4">Select Algorithm</h2>
             <div class="flex flex-wrap gap-4">
                 <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Algorithm</label>
+                    <label class="block text-gray-300 mb-2">Algorithm</label>
                     <select id="algorithm" class="w-full px-3 py-2 border rounded">
                         <option value="fcfs">First-Come First-Serve (FCFS)</option>
                         <option value="sjf">Shortest Job First (SJF)</option>
@@ -153,59 +401,70 @@
                         <option value="rr">Round Robin (RR)</option>
                     </select>
                 </div>
+
                 <div id="timeQuantumContainer" class="w-full md:w-1/4 hidden">
-                    <label class="block text-gray-700 mb-2">Time Quantum</label>
-                    <input type="number" id="timeQuantum" class="w-full px-3 py-2 border rounded" min="1" placeholder="2">
+                    <label class="block text-gray-300 mb-2">Time Quantum</label>
+                    <input type="number" id="timeQuantum" class="w-full px-3 py-2 border rounded" min="1"
+                        placeholder="2">
                 </div>
-                <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Max Time for Gantt Chart (seconds)</label>
-                    <input type="number" id="maxTime" class="w-full px-3 py-2 border rounded" min="1" value="20" placeholder="20">
-                </div>
+
                 <div class="w-full md:w-1/4 flex items-end">
-                    <button id="runAlgorithm" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Run Algorithm</button>
+                    <button id="runAlgorithm"
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Run
+                        Algorithm</button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Animation Controls -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold mb-4">Animation Controls</h2>
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="w-full md:w-1/4">
-                    <label class="block text-gray-700 mb-2">Animation Speed (1-10)</label>
-                    <input type="number" id="animationSpeed" class="w-full px-3 py-2 border rounded" min="0.1" max="10" step="0.1" value="1" placeholder="1">
+                    <label class="block text-gray-300 mb-2">Animation Speed (0.1-10)</label>
+                    <input type="number" id="animationSpeed" class="w-full px-3 py-2 border rounded" min="0.1" max="10"
+                        step="0.1" value="1" placeholder="1">
                 </div>
+
                 <div class="w-full md:w-1/4">
-                    <button id="playAnimation" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+                    <button id="playAnimation"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
                         Play Animation
                     </button>
                 </div>
+
                 <div class="w-full md:w-1/4">
-                    <button id="pauseAnimation" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full" disabled>
+                    <button id="pauseAnimation"
+                        class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full" disabled>
                         Pause Animation
                     </button>
                 </div>
+
                 <div class="w-full md:w-1/4">
                     <button id="resetAnimation" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">
                         Reset Animation
                     </button>
                 </div>
             </div>
+
             <div class="mt-4">
                 <p id="currentTimeIndicator" class="text-lg font-semibold">Current Time: 0.0</p>
             </div>
         </div>
-        
+
+        <div id="ganttHeading">
+            <h2>Gantt Chart</h2>
+        </div>
+
         <!-- Visualization -->
         <div class="mb-8">
-            <h2 class="text-xl font-semibold mb-4">Gantt Chart</h2>
             <div id="ganttChartContainer" class="gantt-container">
-                <div id="ganttChart" class="border rounded relative" style="min-height: 250px;">
+                <div id="ganttChart" class="border rounded relative w-full">
                     <!-- Gantt chart will be displayed here -->
                 </div>
             </div>
         </div>
-        
+
         <!-- Results -->
         <div class="mb-8">
             <h2 class="text-xl font-semibold mb-4">Results</h2>
@@ -214,7 +473,9 @@
             </div>
         </div>
     </div>
-    
+
     <script src="app.js"></script>
+
 </body>
+
 </html>
