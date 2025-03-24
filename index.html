@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduling Algorithms Visualization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .process-block {
+            position: absolute;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+        .time-marker {
+            position: absolute;
+            bottom: -25px;
+            transform: translateX(-50%);
+        }
+        .time-marker.multiple-five {
+            font-weight: bold;
+            color: #000;
+        }
+        .time-marker.multiple-five::after {
+            content: '';
+            position: absolute;
+            height: 15px;
+            width: 2px;
+            background-color: black;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .time-line {
+            position: absolute;
+            width: 1px;
+            background-color: #ccc;
+            top: 0;
+            bottom: 0;
+        }
+        .time-line.multiple-five {
+            width: 2px;
+            background-color: #000;
+        }
+        .gantt-container {
+            overflow-x: auto;
+            margin-top: 40px;
+            padding-bottom: 30px;
+        }
+        .animation-time-marker {
+            position: absolute;
+            width: 3px;
+            background-color: red;
+            top: 0;
+            bottom: -20px;
+            z-index: 20;
+            transition: left 0.1s linear;
+        }
+        .animation-time-marker::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 0);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid red;
+        }
+        .process-track {
+            position: absolute;
+            border: 1px dashed #ccc;
+        }
+        .future-process {
+            opacity: 0.5;
+        }
+        .active-process {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+        .inactive-process {
+            opacity: 0.7;
+        }
+        /* Make the animation controls responsive */
+        @media (max-width: 768px) {
+            .animation-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="container mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-3xl font-bold text-center mb-6">CPU Scheduling Algorithms Visualization</h1>
+        
+        <!-- Input Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Enter Process Details</h2>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Process Name</label>
+                    <input type="text" id="processName" class="w-full px-3 py-2 border rounded" placeholder="P1">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Arrival Time</label>
+                    <input type="number" id="arrivalTime" class="w-full px-3 py-2 border rounded" min="0" placeholder="0">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Burst Time</label>
+                    <input type="number" id="burstTime" class="w-full px-3 py-2 border rounded" min="1" placeholder="5">
+                </div>
+                <div class="w-full md:w-1/4 flex items-end">
+                    <button id="addProcess" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Add Process</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Process Table -->
+        <div class="mb-8 overflow-x-auto">
+            <h2 class="text-xl font-semibold mb-4">Process List</h2>
+            <table class="min-w-full bg-white border">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="py-2 px-4 border">Process Name</th>
+                        <th class="py-2 px-4 border">Arrival Time</th>
+                        <th class="py-2 px-4 border">Burst Time</th>
+                        <th class="py-2 px-4 border">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="processTable">
+                    <!-- Processes will be listed here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Algorithm Selection -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Select Algorithm</h2>
+            <div class="flex flex-wrap gap-4">
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Algorithm</label>
+                    <select id="algorithm" class="w-full px-3 py-2 border rounded">
+                        <option value="fcfs">First-Come First-Serve (FCFS)</option>
+                        <option value="sjf">Shortest Job First (SJF)</option>
+                        <option value="srtn">Shortest Remaining Time Next (SRTN)</option>
+                        <option value="rr">Round Robin (RR)</option>
+                    </select>
+                </div>
+                <div id="timeQuantumContainer" class="w-full md:w-1/4 hidden">
+                    <label class="block text-gray-700 mb-2">Time Quantum</label>
+                    <input type="number" id="timeQuantum" class="w-full px-3 py-2 border rounded" min="1" placeholder="2">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Max Time for Gantt Chart (seconds)</label>
+                    <input type="number" id="maxTime" class="w-full px-3 py-2 border rounded" min="1" value="20" placeholder="20">
+                </div>
+                <div class="w-full md:w-1/4 flex items-end">
+                    <button id="runAlgorithm" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Run Algorithm</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Animation Controls -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Animation Controls</h2>
+            <div class="flex flex-wrap gap-4 items-end">
+                <div class="w-full md:w-1/4">
+                    <label class="block text-gray-700 mb-2">Animation Speed (1-10)</label>
+                    <input type="number" id="animationSpeed" class="w-full px-3 py-2 border rounded" min="0.1" max="10" step="0.1" value="1" placeholder="1">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <button id="playAnimation" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+                        Play Animation
+                    </button>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <button id="pauseAnimation" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full" disabled>
+                        Pause Animation
+                    </button>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <button id="resetAnimation" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">
+                        Reset Animation
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p id="currentTimeIndicator" class="text-lg font-semibold">Current Time: 0.0</p>
+            </div>
+        </div>
+        
+        <!-- Visualization -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Gantt Chart</h2>
+            <div id="ganttChartContainer" class="gantt-container">
+                <div id="ganttChart" class="border rounded relative" style="min-height: 250px;">
+                    <!-- Gantt chart will be displayed here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Results</h2>
+            <div id="results" class="border p-4 rounded">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
