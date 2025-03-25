@@ -76,7 +76,6 @@ function addProcess() {
     processNameInput.focus();
 }
 
-// Update process table
 function updateProcessTable() {
     processTable.innerHTML = '';
     processes.forEach((process) => {
@@ -89,17 +88,37 @@ function updateProcessTable() {
             <td class="py-2 px-4 border">${process.arrivalTime}</td>
             <td class="py-2 px-4 border">${process.burstTime}</td>
             <td class="py-2 px-4 border">
+                <button class="update-btn text-blue-500 hover:text-blue-700 mr-2" data-id="${process.id}">Update</button>
                 <button class="delete-btn text-red-500 hover:text-red-700" data-id="${process.id}">Delete</button>
             </td>
         `;
         processTable.appendChild(row);
     });
 
+    // Add event listeners for delete buttons
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const id = parseInt(this.getAttribute('data-id'));
             processes = processes.filter(p => p.id !== id);
             updateProcessTable();
+        });
+    });
+
+    // Add event listeners for update buttons
+    document.querySelectorAll('.update-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = parseInt(this.getAttribute('data-id'));
+            const process = processes.find(p => p.id === id);
+            if (process) {
+                // Populate input fields with process data
+                processNameInput.value = process.name;
+                arrivalTimeInput.value = process.arrivalTime;
+                burstTimeInput.value = process.burstTime;
+                
+                // Remove the original process
+                processes = processes.filter(p => p.id !== id);
+                updateProcessTable();
+            }
         });
     });
 }
