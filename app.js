@@ -30,6 +30,7 @@ const pauseAnimationBtn = document.getElementById('pauseAnimation');
 const resetAnimationBtn = document.getElementById('resetAnimation');
 const timeIndicator = document.getElementById('currentTimeIndicator');
 
+
 // Event listeners
 addProcessBtn.addEventListener('click', addProcess);
 algorithmSelect.addEventListener('change', toggleTimeQuantum);
@@ -47,7 +48,9 @@ function toggleTimeQuantum() {
     }
 }
 
-// Add process to the list
+
+
+// Function to add a new process
 function addProcess() {
     const name = processNameInput.value.trim() || `P${processes.length + 1}`;
     const arrivalTime = parseInt(arrivalTimeInput.value) || 0;
@@ -64,12 +67,13 @@ function addProcess() {
         arrivalTime,
         burstTime,
         remainingTime: burstTime,
-        color: colors[processes.length % colors.length]
+        color: colors[processes.length % colors.length],
     };
 
     processes.push(process);
     updateProcessTable();
 
+    // Clear input fields
     processNameInput.value = '';
     arrivalTimeInput.value = '';
     burstTimeInput.value = '';
@@ -209,50 +213,6 @@ function updateCurrentProcessIndicator() {
             processIndicator.innerHTML = 'No process running';
         }
     }
-}
-
-// Run selected algorithm
-function runAlgorithm() {
-    resetAnimation();
-
-    if (processes.length === 0) {
-        alert('Please add at least one process.');
-        return;
-    }
-
-    let schedule = [];
-    const algorithm = algorithmSelect.value;
-
-    processes.forEach(process => {
-        process.remainingTime = process.burstTime;
-    });
-
-    switch (algorithm) {
-        case 'fcfs':
-            schedule = runFCFS();
-            break;
-        case 'sjf':
-            schedule = runSJF();
-            break;
-        case 'srtn':
-            schedule = runSRTN();
-            break;
-        case 'rr':
-            const timeQuantum = parseInt(timeQuantumInput.value);
-            if (!timeQuantum || timeQuantum <= 0) {
-                alert('Please enter a valid time quantum.');
-                return;
-            }
-            schedule = runRR(timeQuantum);
-            break;
-    }
-
-    fullSchedule = schedule;
-    maxEndTime = schedule.length > 0 ? Math.ceil(Math.max(...schedule.map(item => item.end))) : 10;
-
-    initializeGanttChart(schedule);
-
-    resultsContainer.innerHTML = '<p class="text-center">Animation in progress. Results will be displayed when animation completes.</p>';
 }
 
 // Algorithm implementations
@@ -451,6 +411,167 @@ function runRR(timeQuantum) {
         }
     }
     return schedule;
+}
+
+// Updated algorithm implementations
+
+function runLJF() {
+    let currentTime = 0;
+    const schedule = [];
+    const processQueue = [...processes].map(p => ({ 
+        ...p, 
+        priority: p.priority || Math.floor(Math.random() * 10) + 1 // Default random priority if not specified
+    }));
+
+    processQueue.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+    while (processQueue.length > 0) {
+        const arrivedProcesses = processQueue.filter(p => p.arrivalTime <= currentTime);
+
+        if (arrivedProcesses.length === 0) {
+            const nextArrival = processQueue[0].arrivalTime;
+            schedule.push({
+                process: 'Idle',
+                start: currentTime,
+                end: nextArrival,
+                color: 'bg-gray-300'
+            });
+            currentTime = nextArrival;
+            continue;
+        }
+
+        arrivedProcesses.sort((a, b) => b.burstTime - a.burstTime);
+        const longestJob = arrivedProcesses[0];
+
+        schedule.push({
+            process: longestJob.name,
+            start: currentTime,
+            end: currentTime + longestJob.burstTime,
+            color: longestJob.color
+        });
+
+        currentTime += longestJob.burstTime;
+        const index = processQueue.findIndex(p => p.id === longestJob.id);
+        processQueue.splice(index, 1);
+    }
+    return schedule;
+}
+
+function runLRJF() {
+    let currentTime = 0;
+    const schedule = [];
+    const processQueue = [...processes].map(p => ({ 
+        ...p, 
+        priority: p.priority || Math.floor(Math.random() * 10) + 1, // Default random priority if not specified
+        remainingTime: p.burstTime 
+    }));
+
+    processQueue.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+    if (processQueue.length === 0) return schedule;
+
+    if (processQueue[0].arrivalTime > 0) {
+        schedule.push({
+            process: 'Idle',
+            start: 0,
+            end: processQueue[0].arrivalTime,
+            color: 'bg-gray-300'
+        });
+        currentTime = processQueue[0].arrivalTime;
+    }
+
+    while (processQueue.some(p => p.remainingTime > 0)) {
+        const availableProcesses = processQueue.filter(
+            p => p.arrivalTime <= currentTime && p.remainingTime > 0
+        );
+
+        if (availableProcesses.length === 0) {
+            const nextProcess = processQueue
+                .filter(p => p.remainingTime > 0)
+                .sort((a, b) => a.arrivalTime - b.arrivalTime)[0];
+            schedule.push({
+                process: 'Idle',
+                start: currentTime,
+                end: nextProcess.arrivalTime,
+                color: 'bg-gray-300'
+            });
+            currentTime = nextProcess.arrivalTime;
+            continue;
+        }
+
+        const lrjfProcess = availableProcesses.sort((a, b) => b.remainingTime - a.remainingTime)[0];
+        const nextArrivalTime = processQueue
+            .filter(p => p.arrivalTime > currentTime && p.remainingTime > 0)
+            .map(p => p.arrivalTime)
+            .sort((a, b) => a - b)[0] || Infinity;
+
+        const runTime = Math.min(
+            lrjfProcess.remainingTime,
+            nextArrivalTime !== Infinity ? nextArrivalTime - currentTime : lrjfProcess.remainingTime
+        );
+
+        schedule.push({
+            process: lrjfProcess.name,
+            start: currentTime,
+            end: currentTime + runTime,
+            color: lrjfProcess.color
+        });
+
+        lrjfProcess.remainingTime -= runTime;
+        currentTime += runTime;
+    }
+    return schedule;
+}
+
+// Update the existing algorithm check in runAlgorithm function
+function runAlgorithm() {
+    resetAnimation();
+
+    if (processes.length === 0) {
+        alert('Please add at least one process.');
+        return;
+    }
+
+    let schedule = [];
+    const algorithm = algorithmSelect.value;
+
+    // Reset remaining time for all processes
+    processes.forEach(process => {
+        process.remainingTime = process.burstTime;
+    });
+
+    switch (algorithm) {
+        case 'fcfs':
+            schedule = runFCFS();
+            break;
+        case 'sjf':
+            schedule = runSJF();
+            break;
+        case 'srtn':
+            schedule = runSRTN();
+            break;
+        case 'rr':
+            const timeQuantum = parseInt(timeQuantumInput.value);
+            if (!timeQuantum || timeQuantum <= 0) {
+                alert('Please enter a valid time quantum.');
+                return;
+            }
+            schedule = runRR(timeQuantum);
+            break;
+        case 'ljf':
+            schedule = runLJF();
+            break;
+        case 'lrjf':
+            schedule = runLRJF();
+            break;
+    }
+
+    fullSchedule = schedule;
+    maxEndTime = schedule.length > 0 ? Math.ceil(Math.max(...schedule.map(item => item.end))) : 10;
+
+    initializeGanttChart(schedule);
+
+    resultsContainer.innerHTML = '<p class="text-center">Animation in progress. Results will be displayed when animation completes.</p>';
 }
 
 function initializeGanttChart(schedule) {

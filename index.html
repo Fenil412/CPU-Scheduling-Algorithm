@@ -66,8 +66,10 @@
                     <select id="algorithm" class="w-full px-3 py-2 border rounded">
                         <option value="fcfs">First-Come First-Serve (FCFS)</option>
                         <option value="sjf">Shortest Job First (SJF)</option>
-                        <option value="srtn">Shortest Remaining Time Next (SRTN)</option>
+                        <option value="srtn">Shortest Remaining Job First (SRJF)</option>
                         <option value="rr">Round Robin (RR)</option>
+                        <option value="ljf">Longest Job First (LJF)</option>
+                        <option value="lrjf">Longest Remaining Job First (LRJF)</option>
                     </select>
                 </div>
 
@@ -76,7 +78,7 @@
                     <input type="number" id="timeQuantum" class="w-full px-3 py-2 border rounded" min="1"
                         placeholder="2">
                 </div>
-
+                
                 <div class="w-full md:w-1/4 flex items-end">
                     <button id="runAlgorithm"
                         class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Run
